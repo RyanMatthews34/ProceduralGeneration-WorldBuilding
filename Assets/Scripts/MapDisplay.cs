@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /*
- * We call this class to render textures
+ * We call functions in this class 
+ * to render textures
  */
 public class MapDisplay : MonoBehaviour
 {
@@ -20,6 +21,5 @@ public class MapDisplay : MonoBehaviour
     {
         meshFilter.sharedMesh = meshData.CreateMesh();
         meshRenderer.sharedMaterial.mainTexture = texture;
-        
     }
 }

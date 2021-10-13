@@ -13,7 +13,12 @@ public static class TextureGenerator
         texture.Apply();
         return texture;
     }
-  
+
+    /*
+    * This function takes a 2D float array
+    * and applies the black/white noise
+    * based on values perlin noise returns.
+    */
     public static Texture2D TextureFromHeightMap(float[,] heightMap)
     {
         int width = heightMap.GetLength(0);
