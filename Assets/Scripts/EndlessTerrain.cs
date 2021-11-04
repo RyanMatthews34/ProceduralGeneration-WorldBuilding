@@ -11,7 +11,11 @@ public class EndlessTerrain : MonoBehaviour
     public const float maxViewDistance = 450;
     public Transform viewer;
 
+    public Material mapMaterial;
+
     public static Vector2 viewPosition;
+    static MapGenerator mapGenerator;
+
     int chunkSize;
     int chunksVisibleInViewDistance;
 
@@ -20,16 +24,17 @@ public class EndlessTerrain : MonoBehaviour
 
     private void Start()
     {
+        mapGenerator = FindObjectOfType<MapGenerator>();
         chunkSize = MapGenerator.mapChunkSize - 1;
         chunksVisibleInViewDistance = Mathf.RoundToInt(maxViewDistance / chunkSize);
     }
     public void Update()
     {
         viewPosition = new Vector2(viewer.position.x, viewer.position.z);
-        updateVisableChunks();
+        UpdateVisableChunks();
     }
 
-    void updateVisableChunks()
+    void UpdateVisableChunks()
     {
         for (int i = 0; i < terrainChunksVisibleLastUpdate.Count; i++)
         {
@@ -55,7 +60,7 @@ public class EndlessTerrain : MonoBehaviour
                 }
                 else
                 {
-                    terrainChunkDictionary.Add(viewChunkCoord, new TerrainChunk(viewChunkCoord, chunkSize, transform));
+                    terrainChunkDictionary.Add(viewChunkCoord, new TerrainChunk(viewChunkCoord, chunkSize, transform, mapMaterial));
                 }
             }
         }
@@ -66,17 +71,38 @@ public class EndlessTerrain : MonoBehaviour
         Vector2 position;
         Bounds bounds;
 
-        public TerrainChunk(Vector2 coord, int size, Transform parent)
+        MapData mapData;
+        MeshRenderer meshRender;
+        MeshFilter meshFilter;
+
+        public TerrainChunk(Vector2 coord, int size, Transform parent, Material material)
         {
             position = coord * size;
             bounds = new Bounds(position, Vector2.one * size);
             Vector3 positionV3 = new Vector3(position.x, 0, position.y);
-            meshObject = GameObject.CreatePrimitive(PrimitiveType.Plane);
+          
+            meshObject = new GameObject("Terrain Chunk");
+            meshRender = meshObject.AddComponent<MeshRenderer>();
+            meshFilter = meshObject.AddComponent<MeshFilter>();
+            meshRender.material = material;
+
             meshObject.transform.position = positionV3;
-            meshObject.transform.localScale = Vector3.one * size / 10f;
             meshObject.transform.parent = parent;
             SetVisible(false);
+
+            mapGenerator.RequestMapData(OnMapDataReceived);
         }
+
+        void OnMapDataReceived(MapData mapData)
+        {
+            mapGenerator.RequestMeshData(mapData, OnMeshDataReceived);
+        }
+
+        void OnMeshDataReceived(MeshData meshData)
+        {
+            meshFilter.mesh = meshData.CreateMesh();
+        }
+
         public void UpdateTerrainChunk()
         {
             float viewerDistanceFormNearestEdge = Mathf.Sqrt(bounds.SqrDistance(viewPosition));
