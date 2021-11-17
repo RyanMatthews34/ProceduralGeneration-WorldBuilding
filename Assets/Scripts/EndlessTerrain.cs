@@ -8,6 +8,8 @@ using UnityEngine;
  */
 public class EndlessTerrain : MonoBehaviour
 {
+    const float scale = 1f;
+
     const float viewerMoveThresholdForChunkUpdate = 25f;
     const float sqrViewerMoveThresholdForChunkUpdate = viewerMoveThresholdForChunkUpdate * viewerMoveThresholdForChunkUpdate;
 
@@ -26,7 +28,7 @@ public class EndlessTerrain : MonoBehaviour
     int chunksVisibleInViewDistance;
 
     Dictionary<Vector2, TerrainChunk> terrainChunkDictionary = new Dictionary<Vector2, TerrainChunk>();
-    List<TerrainChunk> terrainChunksVisibleLastUpdate = new List<TerrainChunk>();
+    static List<TerrainChunk> terrainChunksVisibleLastUpdate = new List<TerrainChunk>();
 
     private void Start()
     {
@@ -39,7 +41,7 @@ public class EndlessTerrain : MonoBehaviour
     }
     public void Update()
     {
-        viewPosition = new Vector2(viewer.position.x, viewer.position.z);
+        viewPosition = new Vector2(viewer.position.x, viewer.position.z) / scale;
 
         if ((viewerPositionOld - viewPosition).sqrMagnitude > sqrViewerMoveThresholdForChunkUpdate)
         {
@@ -48,6 +50,7 @@ public class EndlessTerrain : MonoBehaviour
         }
     }
 
+    //This function gets the chunk the player is on and determinds what chunks around it are visible
     public void UpdateVisableChunks()
         {
             for (int i = 0; i < terrainChunksVisibleLastUpdate.Count; i++)
@@ -66,11 +69,7 @@ public class EndlessTerrain : MonoBehaviour
                     Vector2 viewChunkCoord = new Vector2(currentChunkCoordX + xOffset, currentChunkCoordY + yOffset);
                     if (terrainChunkDictionary.ContainsKey(viewChunkCoord))
                     {
-                        terrainChunkDictionary[viewChunkCoord].UpdateTerrainChunk();
-                        if (terrainChunkDictionary[viewChunkCoord].IsVisible())
-                        {
-                            terrainChunksVisibleLastUpdate.Add(terrainChunkDictionary[viewChunkCoord]);
-                        }
+                        terrainChunkDictionary[viewChunkCoord].UpdateTerrainChunk();                      
                     }
                     else
                     {
@@ -80,6 +79,7 @@ public class EndlessTerrain : MonoBehaviour
             }
         } 
 
+    //This class is created to hold each Chunk info
     public class TerrainChunk
     {
         GameObject meshObject;
@@ -109,8 +109,9 @@ public class EndlessTerrain : MonoBehaviour
             meshFilter = meshObject.AddComponent<MeshFilter>();
             meshRender.material = material;
 
-            meshObject.transform.position = positionV3;
+            meshObject.transform.position = positionV3 * scale;
             meshObject.transform.parent = parent;
+            meshObject.transform.localScale = Vector3.one * scale;
             SetVisible(false);
 
             lodMeshes = new LODMesh[detailLevels.Length];
@@ -166,6 +167,7 @@ public class EndlessTerrain : MonoBehaviour
                             lODMesh.RequestMesh(mapData);
                         }
                     }
+                    terrainChunksVisibleLastUpdate.Add(this);
                 }
                 SetVisible(visible);
             }
@@ -174,13 +176,9 @@ public class EndlessTerrain : MonoBehaviour
         public void SetVisible(bool visible)
         {
             meshObject.SetActive(visible);
-        }
-        public bool IsVisible()
-        {
-            return meshObject.activeSelf;
-        }
+        }       
     }
-
+    
     class LODMesh
     {
         public Mesh mesh;

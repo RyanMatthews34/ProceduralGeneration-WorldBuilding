@@ -12,6 +12,8 @@ public class MapGenerator : MonoBehaviour
 {
     public enum DrawMode {NoiseMap, ColorMap, Mesh};
     public DrawMode drawMode;
+
+    public Noise.NormalizedMode normalizedMode;
     public const int mapChunkSize = 241;
     [Range(0,6)]
     public int editorLOD;
@@ -35,6 +37,8 @@ public class MapGenerator : MonoBehaviour
 
     Queue<MapThreadInfo<MapData>> mapDataThreadInfoQueue = new Queue<MapThreadInfo<MapData>>();
     Queue<MapThreadInfo<MeshData>> meshDataThreadInfoQueue = new Queue<MapThreadInfo<MeshData>>();
+
+    //This function is for MapGenertorEditor script to determind what we want to see generated in the scene
     public void DrawMapInEditor()
     {
         MapData mapData = GenerateMap();
@@ -53,6 +57,7 @@ public class MapGenerator : MonoBehaviour
         }
     }
 
+    //This function is for EndlessTerrainScript and used for Threading
     public void RequestMapData(Vector2 center, Action<MapData> callback)
     {
         ThreadStart threadStart = delegate
@@ -63,6 +68,7 @@ public class MapGenerator : MonoBehaviour
         new Thread(threadStart).Start();
     }
 
+    //Called from RequestMapData and used for Threading
     void MapDataThread(Vector2 center, Action<MapData> callback)
     {
         MapData mapData = GenerateMap();
@@ -73,6 +79,7 @@ public class MapGenerator : MonoBehaviour
         }
     }
 
+    //Called from EndlessTerrainScript and used for Threading
     public void RequestMeshData(MapData mapData, int lod, Action<MeshData> callback)
     {
         ThreadStart threadStart = delegate {
@@ -81,6 +88,7 @@ public class MapGenerator : MonoBehaviour
         new Thread(threadStart).Start();
     }
 
+    //Called from RequestMeshData and used for Threading
     void MeshDataThread(MapData mapData, int lod, Action<MeshData> callback)
     {
         MeshData meshData = MeshGenerator.GenerateTerrainMesh(mapData.heightMap, meshHeightMultipler, meshHeightCurve, lod);
@@ -111,9 +119,10 @@ public class MapGenerator : MonoBehaviour
         }
     }
 
+
     MapData GenerateMap()
     {
-        float[,] noiseMap = Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistence, lacunarity, offset);
+        float[,] noiseMap = Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistence, lacunarity, offset, normalizedMode);
 
         Color[] colorMap = new Color[mapChunkSize * mapChunkSize];
         for (int y = 0; y < mapChunkSize; y++)
@@ -123,9 +132,12 @@ public class MapGenerator : MonoBehaviour
                 float currentHeight = noiseMap[x, y];
                 for (int i = 0; i < regions.Length; i++)
                 {
-                    if(currentHeight <= regions[i].height)
+                    if(currentHeight >= regions[i].height)
                     {
                         colorMap[y * mapChunkSize + x] = regions[i].color;
+                    }
+                    else
+                    {
                         break;
                     }
                 }
@@ -133,6 +145,8 @@ public class MapGenerator : MonoBehaviour
         }
         return new MapData(noiseMap, colorMap);
     }
+
+    //ensures Values are not outside of bounds
     private void OnValidate()
     {      
         if (lacunarity < 1)
@@ -145,6 +159,7 @@ public class MapGenerator : MonoBehaviour
         }
     }
 
+    //Used for Threading
     struct MapThreadInfo<T>
     {
         public readonly Action<T> callback;

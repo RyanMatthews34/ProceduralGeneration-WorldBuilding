@@ -2,6 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/*
+ * This script is for generating Locations to place asset currently just trees
+ * Trees are currently just placed in a preset location that is out of water and below mountains
+ */
 public class AssetGenerator : MonoBehaviour
 {
     Mesh mesh;
@@ -18,16 +22,17 @@ public class AssetGenerator : MonoBehaviour
         PlaceTrees();
     }
 
-    // Update is called once per frame
+    //This function determinds where trees can be placed and places them at the start of game
     void PlaceTrees()
     {
         for (int i = 0; i < vertices.Length; i++)
         {
-            if (vertices[i].y > 5 && vertices[i].y < 8)
+            if (vertices[i].y > 2.3 && vertices[i].y < 2.35)
             {
-                Debug.Log("Placing Tree");
-                //vertices[i] += Vector3.up * Time.deltaTime;
-                GameObject spawnedObject = Instantiate(OriginalTree, vertices[i], Quaternion.identity);
+                float yAxisOffset = Random.Range(-3.0f, -1f);
+                Vector3 placementVertex = vertices[i];
+                placementVertex.y += yAxisOffset;
+                GameObject spawnedObject = Instantiate(OriginalTree, placementVertex, Quaternion.identity);
                 Trees.Add(spawnedObject);
                 TreePosition.Add(spawnedObject.transform.position);
             }                                                                       
