@@ -7,7 +7,7 @@ using UnityEditor;
  * This class is used add functionality to our editor for the map generator.
  * currently allowing us to auto generate terrain when variables have been adjusted.
  */
-[CustomEditor (typeof (MapGenerator))]
+[CustomEditor(typeof(MapGenerator))]
 public class MapGeneratorEditor : Editor
 {
     public override void OnInspectorGUI()
@@ -20,9 +20,9 @@ public class MapGeneratorEditor : Editor
             {
                 mapGen.DrawMapInEditor();
             }
-        }         
+        }
 
-        if(GUILayout.Button ("Generate"))
+        if (GUILayout.Button("Generate"))
         {
             mapGen.DrawMapInEditor();
         }

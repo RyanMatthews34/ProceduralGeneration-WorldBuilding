@@ -35,7 +35,7 @@ public class AssetGenerator : MonoBehaviour
                 GameObject spawnedObject = Instantiate(OriginalTree, placementVertex, Quaternion.identity);
                 Trees.Add(spawnedObject);
                 TreePosition.Add(spawnedObject.transform.position);
-            }                                                                       
-        }       
+            }
+        }
     }
 }
